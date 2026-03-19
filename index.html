@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>飲食記錄</title>
   <style>
-    /* 模擬手機 App 風格的 CSS */
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
@@ -14,7 +13,7 @@
       color: #333;
     }
     header {
-      background-color: #ff9800; /* 食物主題橘色 */
+      background-color: #ff9800;
       color: white;
       text-align: center;
       padding: 16px;
@@ -45,9 +44,8 @@
       box-sizing: border-box;
       font-size: 16px;
       background-color: #fff;
-      -webkit-appearance: none; /* 讓 iOS 上的選單樣式更好看 */
+      -webkit-appearance: none;
     }
-    /* 自訂檔案上傳按鈕樣式 */
     .file-upload-wrapper {
       position: relative;
       overflow: hidden;
@@ -66,8 +64,8 @@
       text-align: center;
       box-sizing: border-box;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
+    /* 核心修正：移除 capture 屬性，保留 accept="image/*" */
     .file-upload-wrapper input[type="file"] {
       font-size: 100px;
       position: absolute;
@@ -90,12 +88,10 @@
       cursor: pointer;
       margin-top: 10px;
       box-shadow: 0 4px 6px rgba(255, 152, 0, 0.3);
-      transition: background-color 0.3s;
     }
     button[type="submit"]:disabled {
       background-color: #ccc;
       box-shadow: none;
-      cursor: not-allowed;
     }
     #status {
       text-align: center;
@@ -103,6 +99,18 @@
       font-weight: bold;
       font-size: 14px;
       min-height: 20px;
+    }
+    #previewContainer {
+      width: 100%;
+      text-align: center;
+      margin-top: 10px;
+    }
+    #previewImg {
+      max-width: 100px;
+      max-height: 100px;
+      border-radius: 4px;
+      display: none;
+      margin: 0 auto;
     }
   </style>
 </head>
@@ -114,10 +122,13 @@
     <form id="dietForm">
       
       <div class="form-group">
-        <label>照片</label>
+        <label>相片 (拍照或從相簿選取)</label>
         <div class="file-upload-wrapper">
-          <div class="file-upload-btn" id="fileLabel">📸 點擊拍照或選取相片</div>
-          <input type="file" id="photo" accept="image/*" capture="environment" required>
+          <div class="file-upload-btn" id="fileLabel">📸 點擊選取相片</div>
+          <input type="file" id="photo" accept="image/*" required>
+        </div>
+        <div id="previewContainer">
+          <img id="previewImg" alt="預覽圖">
         </div>
       </div>
 
@@ -132,12 +143,12 @@
 
       <div class="form-group">
         <label>食店名稱 (Merchant)</label>
-        <input type="text" id="merchant" placeholder="例如：麥當勞、自家廚房" required>
+        <input type="text" id="merchant" placeholder="例如：麥當勞" required>
       </div>
 
       <div class="form-group">
         <label>食物 (Food Name)</label>
-        <input type="text" id="foodName" placeholder="例如：大麥克套餐" required>
+        <input type="text" id="foodName" placeholder="例如：漢堡包" required>
       </div>
 
       <button type="submit" id="submitBtn">傳送資料</button>
@@ -147,27 +158,31 @@
   </div>
 
   <script>
-    // 這裡已經替換為你專屬的 Google Apps Script API 網址
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwc80ayuKY8EHNa8kLfe_sOuHMHvEE3YzVGouQxdD0lztuOuKlU9sf_6ggkv3_UoHy-/exec";
 
     const form = document.getElementById('dietForm');
     const photoInput = document.getElementById('photo');
     const fileLabel = document.getElementById('fileLabel');
+    const previewImg = document.getElementById('previewImg');
     const submitBtn = document.getElementById('submitBtn');
     const statusDiv = document.getElementById('status');
 
-    // 當選擇檔案時更新按鈕文字顯示檔名
+    // 處理相片選取後的預覽與文字更新
     photoInput.addEventListener('change', function(e) {
       if(e.target.files.length > 0) {
-        fileLabel.innerText = "✅ 已選取相片: " + e.target.files[0].name;
-        fileLabel.style.backgroundColor = "#e8f5e9";
-        fileLabel.style.borderColor = "#4caf50";
-        fileLabel.style.color = "#4caf50";
+        const file = e.target.files[0];
+        fileLabel.innerText = "✅ 已選取: " + file.name;
+        
+        // 顯示小預覽圖
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          previewImg.src = e.target.result;
+          previewImg.style.display = "block";
+        }
+        reader.readAsDataURL(file);
       } else {
-        fileLabel.innerText = "📸 點擊拍照或選取相片";
-        fileLabel.style.backgroundColor = "white";
-        fileLabel.style.borderColor = "#ff9800";
-        fileLabel.style.color = "#ff9800";
+        fileLabel.innerText = "📸 點擊選取相片";
+        previewImg.style.display = "none";
       }
     });
 
@@ -175,29 +190,19 @@
       e.preventDefault();
       
       const file = photoInput.files[0];
-      if (!file) {
-        alert("請先上傳照片！");
-        return;
-      }
+      if (!file) return;
 
-      // 鎖定按鈕避免重複發送
       submitBtn.disabled = true;
-      submitBtn.innerText = "資料處理中，請稍候...";
-      statusDiv.innerText = "正在壓縮圖片...";
-      statusDiv.style.color = "#ff9800";
+      submitBtn.innerText = "上傳中...";
+      statusDiv.innerText = "正在處理資料...";
 
-      // 取得當前日期與時間
       const now = new Date();
-      // 格式化為 YYYY/MM/DD (Google Sheet 較易識別的日期格式)
       const dateStr = now.getFullYear() + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + String(now.getDate()).padStart(2, '0');
-      // 格式化為 HH:mm:ss
       const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
 
       try {
-        // 壓縮圖片並轉為 Base64 字串
         const base64Image = await compressAndConvertImage(file);
         
-        // 準備要傳送的資料
         const payload = {
           date: dateStr,
           time: timeStr,
@@ -207,12 +212,8 @@
           imageBase64: base64Image
         };
 
-        statusDiv.innerText = "正在傳送至 Google 雲端，請勿關閉網頁...";
-
-        // 傳送 POST 請求至 Google Apps Script
         const response = await fetch(GAS_URL, {
           method: 'POST',
-          // 使用 text/plain 避免跨域 (CORS) 預檢請求問題
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
@@ -220,33 +221,24 @@
         const result = await response.json();
 
         if (result.status === "success") {
-          statusDiv.innerText = "✅ 傳送成功！";
+          statusDiv.innerText = "✅ 成功存入 Google Sheet！";
           statusDiv.style.color = "green";
-          // 重置表單
           form.reset();
-          fileLabel.innerText = "📸 點擊拍照或選取相片";
-          fileLabel.style.backgroundColor = "white";
-          fileLabel.style.borderColor = "#ff9800";
-          fileLabel.style.color = "#ff9800";
-          
-          // 3秒後清除成功訊息
-          setTimeout(() => { statusDiv.innerText = ""; }, 3000);
+          previewImg.style.display = "none";
+          fileLabel.innerText = "📸 點擊選取相片";
         } else {
           throw new Error(result.message);
         }
 
       } catch (error) {
-        console.error("Error:", error);
-        statusDiv.innerText = "❌ 傳送失敗，請重試。(" + error.message + ")";
+        statusDiv.innerText = "❌ 錯誤: " + error.message;
         statusDiv.style.color = "red";
       } finally {
-        // 恢復按鈕狀態
         submitBtn.disabled = false;
         submitBtn.innerText = "傳送資料";
       }
     });
 
-    // 圖片壓縮函數：利用 Canvas 壓縮圖片，避免手機原圖過大導致上傳超時或失敗
     function compressAndConvertImage(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -256,29 +248,21 @@
           img.src = event.target.result;
           img.onload = function() {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800; // 壓縮後的最大寬度設定為 800px
+            const MAX_WIDTH = 1000; 
             let width = img.width;
             let height = img.height;
-
             if (width > MAX_WIDTH) {
               height = Math.round((height * MAX_WIDTH) / width);
               width = MAX_WIDTH;
             }
-
             canvas.width = width;
             canvas.height = height;
-
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            
-            // 轉出為 JPEG 格式，品質設定 0.8
             const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            // 只回傳 base64 的資料部分，去掉 "data:image/jpeg;base64," 前綴
             resolve(dataUrl.split(',')[1]);
           };
-          img.onerror = error => reject(error);
         };
-        reader.onerror = error => reject(error);
       });
     }
   </script>
