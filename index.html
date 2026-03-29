@@ -3,103 +3,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>飲食記錄 (自動計算版)</title>
+  <title>飲食記錄</title>
   <style>
-    body { font-family: -apple-system, sans-serif; margin: 0; background: #f7f7f8; }
-    header { background: #ff9800; color: white; text-align: center; padding: 16px; font-weight: bold; }
+    body { font-family: -apple-system, sans-serif; margin: 0; background: #f7f7f8; color: #333; }
+    header { background: #ff9800; color: white; text-align: center; padding: 18px; font-weight: bold; font-size: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .container { padding: 20px; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-    input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: #fff; }
-    .food-item { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
-    .food-item input { flex: 3; }
-    .food-item select { flex: 1.5; }
-    .del-btn { background: #ff5252; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; flex-shrink: 0; }
-    
-    /* 按鈕樣式優化 */
-    .button-row { display: flex; gap: 10px; margin-bottom: 20px; }
-    .add-btn { flex: 1; background: white; color: #ff9800; border: 1px solid #ff9800; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    .sync-btn { flex: 1; background: #4caf50; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    
-    .upload-box { border: 2px dashed #ff9800; padding: 15px; text-align: center; border-radius: 8px; background: #fff; position: relative; }
-    #photo { position: absolute; opacity: 0; left: 0; top: 0; width: 100%; height: 100%; }
-    #previewImg { max-width: 100%; max-height: 150px; display: none; margin: 10px auto; border-radius: 5px; }
-    button[type="submit"] { width: 100%; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; }
-    #status { text-align: center; margin-top: 15px; font-size: 14px; font-weight: bold; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; color: #666; }
+    input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; background: #fff; -webkit-appearance: none; }
+    .food-item { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #eee; }
+    .food-item input { flex: 3; border: none; background: transparent; padding: 5px; }
+    .food-item select { flex: 1.5; border: 1px solid #eee; padding: 5px; background: #f9f9f9; text-align: center; }
+    .del-btn { background: #ff5252; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; flex-shrink: 0; font-weight: bold; }
+    .add-btn { background: white; color: #ff9800; border: 2px solid #ff9800; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px; }
+    .upload-box { border: 2px dashed #ff9800; padding: 20px; text-align: center; border-radius: 10px; background: #fff; position: relative; margin-top: 5px; }
+    #photo { position: absolute; opacity: 0; left: 0; top: 0; width: 100%; height: 100%; cursor: pointer; }
+    #previewImg { max-width: 100%; max-height: 200px; display: none; margin: 15px auto; border-radius: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+    #submitBtn { width: 100%; padding: 16px; background: #ff9800; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; margin-top: 25px; box-shadow: 0 4px 10px rgba(255,152,0,0.3); }
+    #submitBtn:disabled { background: #ccc; box-shadow: none; }
+    #status { text-align: center; margin-top: 20px; font-size: 15px; font-weight: bold; min-height: 1.5em; }
   </style>
 </head>
 <body>
 
-<header>飲食記錄</header>
+<header>🍎 飲食記錄系統</header>
 
 <div class="container">
   <form id="dietForm">
     <div class="form-group">
-      <label>相片</label>
+      <label>現場拍照</label>
       <div class="upload-box">
-        <span id="fileLabel">📸 點擊拍照</span>
+        <span id="fileLabel">📸 點擊開啟相機</span>
         <input type="file" id="photo" accept="image/*" required>
       </div>
       <img id="previewImg">
     </div>
 
     <div class="form-group">
-      <label>資訊</label>
+      <label>用餐類型 & 店名</label>
       <select id="type" style="margin-bottom: 10px;">
-        <option value="外出">外出</option>
-        <option value="Self Prepare">Self Prepare</option>
+        <option value="外出">外出用餐</option>
+        <option value="Self Prepare">自備 (Self Prepare)</option>
       </select>
-      <input type="text" id="merchant" placeholder="店名" required>
+      <input type="text" id="merchant" placeholder="輸入食店或地點名稱" required>
     </div>
 
     <div class="form-group">
-      <label>食物清單 (名稱需對應卡路里表)</label>
+      <label>食物內容與數量</label>
       <div id="foodList"></div>
-      <div class="button-row">
-        <button type="button" class="add-btn" onclick="addFoodRow()">＋ 新增食物</button>
-        <button type="button" class="sync-btn" onclick="manualSync()">🍔 手動更新卡路里資料</button>
-      </div>
+      <button type="button" class="add-btn" onclick="addFoodRow()">＋ 新增食物項目</button>
     </div>
 
-    <button type="submit" id="submitBtn">一次過傳送並計算</button>
+    <button type="submit" id="submitBtn">確認傳送資料</button>
     <div id="status"></div>
   </form>
 </div>
 
 <script>
-  const GAS_URL = "你的_WEB_APP_URL"; // 請更換為你部署後的 URL
+  // 重要：請在此處填入你部署後獲得的網址
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbwc80ayuKY8EHNa8kLfe_sOuHMHvEE3YzVGouQxdD0lztuOuKlU9sf_6ggkv3_UoHy-/exec";
 
+  const foodListContainer = document.getElementById('foodList');
+  
+  // 新增食物列函數
   function addFoodRow() {
     const div = document.createElement('div');
     div.className = 'food-item';
     div.innerHTML = `
-      <input type="text" name="foodName" placeholder="食物名稱" required>
+      <input type="text" name="foodName" placeholder="食物名稱 (例如: 雞扒)" required>
       <select name="foodQty">
         <option value="0.5">0.5</option>
         <option value="1" selected>1</option>
-        <option value="1.5">1.5</option>
         <option value="2">2</option>
         <option value="3">3</option>
         <option value="4">4</option>
         <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
       </select>
       <button type="button" class="del-btn" onclick="this.parentElement.remove()">✕</button>
     `;
-    document.getElementById('foodList').appendChild(div);
+    foodListContainer.appendChild(div);
   }
-  addFoodRow();
+  
+  // 預設載入一行
+  addFoodRow(); 
 
-  // 手動更新按鈕功能
-  function manualSync() {
-    if(confirm("是否已在試算表更新「食物卡路里」分頁？按確定將刷新頁面以讀取最新對照。")) {
-      location.reload();
-    }
-  }
-
+  // 相片預覽處理
   const photoInput = document.getElementById('photo');
   photoInput.onchange = e => {
     if(e.target.files[0]) {
-      document.getElementById('fileLabel').innerText = "✅ 已選取相片";
+      document.getElementById('fileLabel').innerText = "✅ 相片已就緒";
       const reader = new FileReader();
       reader.onload = ev => { 
         const preview = document.getElementById('previewImg');
@@ -110,32 +107,40 @@
     }
   };
 
+  // 表單送出處理
   document.getElementById('dietForm').onsubmit = async e => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
     const status = document.getElementById('status');
     
+    // 收集清單
     const items = Array.from(document.querySelectorAll('.food-item')).map(row => ({
       name: row.querySelector('[name="foodName"]').value.trim(),
       qty: row.querySelector('[name="foodQty"]').value
     }));
 
+    if (items.length === 0) { alert("請至少新增一項食物"); return; }
+
     btn.disabled = true;
     status.style.color = "#ff9800";
-    status.innerText = "⏳ 正在傳送並計算卡路里...";
+    status.innerText = "⏳ 正在傳送，請勿關閉視窗...";
 
     try {
       const now = new Date();
-      const d = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
-      const t = now.toTimeString().split(' ')[0];
+      const pad = n => (n < 10 ? '0' + n : n);
+      const d = `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())}`;
+      const t = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+      // 壓縮並轉碼圖片
       const base64Image = await compressImage(photoInput.files[0]);
 
+      // 打包 Payload (單次發送)
       const payload = {
         date: d, time: t,
         type: document.getElementById('type').value,
         merchant: document.getElementById('merchant').value,
         imageBase64: base64Image,
-        items: items 
+        items: items
       };
 
       const response = await fetch(GAS_URL, {
@@ -143,9 +148,15 @@
         body: JSON.stringify(payload)
       });
 
-      status.style.color = "green";
-      status.innerText = "✅ 成功！卡路里已自動計算";
-      setTimeout(() => location.reload(), 1500);
+      const result = await response.json();
+      
+      if(result.status === "success") {
+        status.style.color = "green";
+        status.innerText = "✅ 傳送成功！卡路里已計算。";
+        setTimeout(() => location.reload(), 2000);
+      } else {
+        throw new Error(result.message);
+      }
 
     } catch(err) {
       status.style.color = "red";
@@ -154,8 +165,9 @@
     }
   };
 
+  // 圖片壓縮優化
   function compressImage(file) {
-    return new Promise(res => {
+    return new Promise((resolve) => {
       const img = new Image();
       img.src = URL.createObjectURL(file);
       img.onload = () => {
@@ -166,10 +178,11 @@
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
-        res(canvas.toDataURL('image/jpeg', 0.6).split(',')[1]);
+        resolve(canvas.toDataURL('image/jpeg', 0.6).split(',')[1]);
       };
     });
   }
 </script>
+
 </body>
 </html>
