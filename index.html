@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>飲食記錄系統</title>
   <style>
-    /* 原有樣式保持不變 */
     body { font-family: -apple-system, sans-serif; margin: 0; background: #f7f7f8; color: #333; padding-bottom: 50px; }
     header { background: #ff9800; color: white; text-align: center; padding: 18px; font-weight: bold; font-size: 20px; }
     .container { padding: 20px; }
@@ -23,15 +22,15 @@
     #submitBtn { width: 100%; padding: 16px; background: #ff9800; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; margin-top: 25px; }
     #status { text-align: center; margin-top: 20px; font-size: 15px; font-weight: bold; }
 
-    /* 新區域樣式 */
-    .dashboard { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+    /* 數據區域 */
+    .dashboard { margin-top: 40px; border-top: 2px solid #ddd; padding-top: 20px; }
     .dashboard-title { font-size: 22px; font-weight: bold; color: #ff9800; margin-bottom: 15px; text-align: center; }
     .base-info { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ddd; }
     .base-info p { margin: 5px 0; font-weight: bold; font-size: 15px; }
-    .card { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee; }
+    .card { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     .card-title { font-size: 17px; font-weight: bold; border-left: 4px solid #ff9800; padding-left: 10px; margin-bottom: 12px; }
     .progress-main { font-size: 24px; font-weight: 900; color: #ff9800; text-align: center; margin: 10px 0; }
-    .weekly-row { font-size: 13px; margin-bottom: 5px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+    .weekly-row { font-size: 13px; margin-bottom: 5px; border-bottom: 1px dashed #eee; padding-bottom: 5px; line-height: 1.4; }
     .rank-item { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; }
     .badge { background: #ff9800; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
     .alert-text { color: #ff5252; font-weight: bold; }
@@ -51,7 +50,7 @@
     <div class="form-group">
       <label>用餐類型 & 店名</label>
       <select id="type" style="margin-bottom: 10px;"><option value="外出">外出用餐</option><option value="Self Prepare">自備 (Self Prepare)</option></select>
-      <input type="text" id="merchant" placeholder="輸入食店或地點名稱" required>
+      <input type="text" id="merchant" placeholder="輸入食店" required>
     </div>
     <div class="form-group">
       <label>食物內容與數量</label>
@@ -64,12 +63,7 @@
 
   <div class="dashboard">
     <div class="dashboard-title">📊 查看數據</div>
-    
-    <div class="form-group">
-      <label>用戶</label>
-      <select disabled><option selected>Harry</option></select>
-    </div>
-
+    <div class="form-group"><label>用戶</label><select disabled><option selected>Harry</option></select></div>
     <div class="base-info">
       <p>一日所需基本卡路里：3000</p>
       <p>目標熱量赤字：200</p>
@@ -79,8 +73,8 @@
     <div class="card">
       <div class="card-title">今日進程</div>
       <input type="date" id="statsDate" onchange="loadStats()">
-      <div class="progress-main" id="dailyDisplay">0 / 2800</div>
-      <div style="text-align:center; font-size:14px;" id="dailyRemain">今天尚餘 2800 卡路里涉取</div>
+      <div class="progress-main" id="dailyDisplay">讀取中...</div>
+      <div style="text-align:center; font-size:14px;" id="dailyRemain">--</div>
     </div>
 
     <div class="card">
@@ -90,115 +84,88 @@
       <div id="weeklyTotalDisplay" style="margin-top:10px; font-weight:bold; text-align:right; color:#ff9800;"></div>
     </div>
 
-    <div class="card">
-      <div class="card-title">食店排行榜 (本週)</div>
-      <div id="merchantRankList"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">食物排行榜 (本週)</div>
-      <div id="foodRankList"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">外出 / Self Prepare 比例</div>
-      <div id="ratioDisplay" style="text-align:center; font-weight:bold;"></div>
-    </div>
+    <div class="card"><div class="card-title">食店排行榜 (本週)</div><div id="merchantRankList"></div></div>
+    <div class="card"><div class="card-title">食物排行榜 (本週)</div><div id="foodRankList"></div></div>
+    <div class="card"><div class="card-title">外出 / Self Prepare 比例</div><div id="ratioDisplay" style="text-align:center; font-weight:bold;">--</div></div>
   </div>
 </div>
 
 <script>
-  // GAS 網址需保持一致
   const GAS_URL = "https://script.google.com/macros/s/AKfycbwc80ayuKY8EHNa8kLfe_sOuHMHvEE3YzVGouQxdD0lztuOuKlU9sf_6ggkv3_UoHy-/exec";
 
-  // 初始化日期設定
   window.onload = () => {
     const now = new Date();
-    // 設定今日進程日期
-    const dateInput = document.getElementById('statsDate');
-    dateInput.value = now.toISOString().split('T')[0];
-    dateInput.max = now.toISOString().split('T')[0];
+    document.getElementById('statsDate').value = now.toISOString().split('T')[0];
     
-    // 設定 14 日限制
-    const minDate = new Date();
-    minDate.setDate(now.getDate() - 14);
-    dateInput.min = minDate.toISOString().split('T')[0];
-
-    // 設定週份
-    const weekInput = document.getElementById('statsWeek');
-    const year = now.getFullYear();
-    const oneJan = new Date(year, 0, 1);
-    const numberOfDays = Math.floor((now - oneJan) / (24 * 60 * 60 * 1000));
-    const result = Math.ceil((now.getDay() + 1 + numberOfDays) / 7);
-    weekInput.value = `${year}-W${String(result).padStart(2,'0')}`;
+    // 計算當前週份 (ISO-8601)
+    const target = new Date(now.valueOf());
+    const dayNr = (now.getDay() + 6) % 7;
+    target.setDate(target.getDate() - dayNr + 3);
+    const firstThursday = target.valueOf();
+    target.setMonth(0, 1);
+    if (target.getDay() !== 4) target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+    const weekNum = 1 + Math.ceil((firstThursday - target) / 604800000);
+    document.getElementById('statsWeek').value = `${now.getFullYear()}-W${String(weekNum).padStart(2,'0')}`;
 
     loadStats();
   };
 
-  // 調用 GAS 拿取統計資料
-  function loadStats() {
+  async function loadStats() {
     const date = document.getElementById('statsDate').value;
     const week = document.getElementById('statsWeek').value;
-    
-    // 在這裏我們使用一小段技巧，因為 GAS Web App 的跨域限制，
-    // 通常數據獲取會建議放在 doGet 載入。這裡為求方便，我們直接用 JSONP 或 Google Script Run。
-    // 假設您是將此 HTML 部署在 GAS 內部，請使用下面這行：
-    if(typeof google !== 'undefined') {
-      google.script.run.withSuccessHandler(renderStats).getStatistics(date, week);
+    const status = document.getElementById('dailyDisplay');
+    status.innerText = "⏳ 讀取中...";
+
+    try {
+      // 透過 GET 方式獲取 JSON 資料
+      const response = await fetch(`${GAS_URL}?action=getStats&date=${date}&week=${week}`);
+      const s = await response.json();
+      renderStats(s);
+    } catch (e) {
+      status.innerText = "讀取失敗";
+      console.error(e);
     }
   }
 
   function renderStats(s) {
-    if(!s || s.error) return;
-
-    // 1. 今日
     document.getElementById('dailyDisplay').innerText = `${Math.round(s.dailyTotal)} / 2800`;
     const remain = 2800 - s.dailyTotal;
     document.getElementById('dailyRemain').innerText = `今天尚餘 ${Math.round(remain)} 卡路里涉取`;
 
-    // 2. 週進度
     let weekHtml = '';
     s.weeklyLog.forEach(day => {
-      const alertClass = day.deficit < 0 ? 'alert-text' : '';
-      const deficitText = day.deficit < 0 ? ` ＝ ${day.deficit} <span class="alert-text">(多餘熱量！)</span>` : ` ＝ ${day.deficit} (熱量赤字)`;
-      weekHtml += `<div class="weekly-row">${day.dateText}：2800 - ${Math.round(day.cal)}${deficitText}</div>`;
+      const isExtra = day.deficit < 0;
+      weekHtml += `<div class="weekly-row">${day.dateText}：2800 - ${Math.round(day.cal)} ＝ ${Math.round(day.deficit)} ${isExtra ? '<span class="alert-text">(多餘熱量！)</span>' : '(熱量赤字)'}</div>`;
     });
     document.getElementById('weeklyLogList').innerHTML = weekHtml;
     document.getElementById('weeklyTotalDisplay').innerText = `本週總結：${s.weeklyTotalDeficit >= 0 ? '熱量赤字 ' : '多餘熱量 '}${Math.round(Math.abs(s.weeklyTotalDeficit))}`;
 
-    // 3. 排行榜渲染函數
     const renderRank = (data, elementId) => {
       const sorted = Object.entries(data).sort((a,b) => b[1] - a[1]).slice(0, 5);
-      document.getElementById(elementId).innerHTML = sorted.map(([name, count]) => 
-        `<div class="rank-item"><span>${name}</span><span class="badge">${count} 次</span></div>`
-      ).join('') || '本週暫無數據';
+      document.getElementById(elementId).innerHTML = sorted.map(([name, count]) => `<div class="rank-item"><span>${name}</span><span class="badge">${count} 次</span></div>`).join('') || '暫無數據';
     };
     renderRank(s.merchantRank, 'merchantRankList');
     renderRank(s.foodRank, 'foodRankList');
 
-    // 4. 比例
     const total = s.sourceRatio["外出"] + s.sourceRatio["Self Prepare"];
-    if(total > 0) {
-      const outP = Math.round(s.sourceRatio["外出"]/total*100);
-      document.getElementById('ratioDisplay').innerText = `外出 ${outP}% | 自備 ${100-outP}%`;
-    }
+    document.getElementById('ratioDisplay').innerText = total > 0 ? `外出 ${Math.round(s.sourceRatio["外出"]/total*100)}% | 自備 ${Math.round(s.sourceRatio["Self Prepare"]/total*100)}%` : '--';
   }
 
-  // --- 原有功能函數 (維持不變) ---
   function addFoodRow() {
     const div = document.createElement('div');
     div.className = 'food-item';
     div.innerHTML = `<input type="text" name="foodName" placeholder="食物名稱" required>
       <select name="foodQty"><option value="0.5">0.5</option><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
       <button type="button" class="del-btn" onclick="this.parentElement.remove()">✕</button>`;
-    document.getElementById('foodList').appendChild(div);
+    foodListContainer.appendChild(div);
   }
+  const foodListContainer = document.getElementById('foodList');
   addFoodRow();
 
   const photoInput = document.getElementById('photo');
   photoInput.onchange = e => {
     if(e.target.files[0]) {
-      document.getElementById('fileLabel').innerText = "✅ 相片已就緒";
+      document.getElementById('fileLabel').innerText = "✅ 已就緒";
       const reader = new FileReader();
       reader.onload = ev => { 
         document.getElementById('previewImg').src = ev.target.result;
@@ -217,20 +184,17 @@
       qty: row.querySelector('[name="foodQty"]').value
     }));
     btn.disabled = true;
-    status.innerText = "⏳ 正在傳送...";
+    status.innerText = "⏳ 傳送中...";
     try {
       const now = new Date();
-      const pad = n => (n < 10 ? '0' + n : n);
-      const d = `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())}`;
-      const t = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      const d = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
+      const t = now.toTimeString().split(' ')[0];
       const base64Image = await compressImage(photoInput.files[0]);
-      const payload = { date: d, time: t, type: document.getElementById('type').value, merchant: document.getElementById('merchant').value, imageBase64: base64Image, items: items };
-      await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
-      status.innerText = "✅ 成功！正在更新數據...";
-      loadStats(); // 上傳後刷新數據
-      setTimeout(() => location.reload(), 2000);
+      await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ date: d, time: t, type: document.getElementById('type').value, merchant: document.getElementById('merchant').value, imageBase64: base64Image, items: items }) });
+      status.innerText = "✅ 成功！";
+      setTimeout(() => location.reload(), 1500);
     } catch(err) {
-      status.innerText = "❌ 錯誤：" + err.message;
+      status.innerText = "❌ 失敗";
       btn.disabled = false;
     }
   };
@@ -252,6 +216,5 @@
     });
   }
 </script>
-
 </body>
 </html>
