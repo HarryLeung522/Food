@@ -14,13 +14,13 @@
     .food-item { display: flex; gap: 8px; margin-bottom: 10px; }
     .food-item input[name="foodName"] { flex: 3; }
     .food-item input[name="foodQty"] { flex: 1.5; text-align: center; }
-    .del-btn { background: #ff5252; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; }
+    .del-btn { background: #ff5252; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; flex-shrink: 0; }
     .add-btn { background: white; color: #ff9800; border: 1px solid #ff9800; padding: 10px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; }
     .upload-box { border: 2px dashed #ff9800; padding: 15px; text-align: center; border-radius: 8px; background: white; cursor: pointer; position: relative; }
-    #photo { position: absolute; opacity: 0; left: 0; top: 0; width: 100%; height: 100%; }
+    #photo { position: absolute; opacity: 0; left: 0; top: 0; width: 100%; height: 100%; cursor: pointer; }
     #previewImg { max-width: 100%; max-height: 150px; display: none; margin: 10px auto; border-radius: 5px; }
     button[type="submit"] { width: 100%; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin-top: 20px; }
-    #status { text-align: center; margin-top: 15px; font-size: 14px; color: #666; }
+    #status { text-align: center; margin-top: 15px; font-size: 14px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -32,7 +32,7 @@
     <div class="form-group">
       <label>相片</label>
       <div class="upload-box">
-        <span id="fileLabel">📸 點擊選取相片</span>
+        <span id="fileLabel">📸 點擊拍照或選取</span>
         <input type="file" id="photo" accept="image/*" required>
       </div>
       <img id="previewImg">
@@ -48,7 +48,7 @@
 
     <div class="form-group">
       <label>食店名稱</label>
-      <input type="text" id="merchant" placeholder="店名" required>
+      <input type="text" id="merchant" placeholder="例如：麥當勞" required>
     </div>
 
     <div class="form-group">
@@ -70,20 +70,20 @@
     const div = document.createElement('div');
     div.className = 'food-item';
     div.innerHTML = `<input type="text" name="foodName" placeholder="食物" required>
-                     <input type="number" name="foodQty" value="1" min="0.5" step="0.5">
+                     <input type="number" name="foodQty" value="1" min="0.5" step="0.5" required>
                      <button type="button" class="del-btn" onclick="this.parentElement.remove()">✕</button>`;
     foodListContainer.appendChild(div);
   }
-  addFoodRow(); // 初始一行
+  addFoodRow(); 
 
   const photoInput = document.getElementById('photo');
   photoInput.onchange = e => {
     if(e.target.files[0]) {
       document.getElementById('fileLabel').innerText = "✅ 已選取相片";
       const reader = new FileReader();
-      reader.onload = e => { 
+      reader.onload = event => { 
         const preview = document.getElementById('previewImg');
-        preview.src = e.target.result;
+        preview.src = event.target.result;
         preview.style.display = "block";
       };
       reader.readAsDataURL(e.target.files[0]);
@@ -94,63 +94,85 @@
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
     const status = document.getElementById('status');
+    
     const items = Array.from(document.querySelectorAll('.food-item')).map(row => ({
-      name: row.querySelector('[name="foodName"]').value,
+      name: row.querySelector('[name="foodName"]').value.trim(),
       qty: row.querySelector('[name="foodQty"]').value
     }));
 
+    if (items.length === 0 || items.some(item => !item.name)) {
+      alert("請完整填寫食物名稱！"); return;
+    }
+
     btn.disabled = true;
-    status.innerText = "正在處理圖片...";
+    status.style.color = "#ff9800";
+    status.innerText = "正在處理圖片，請稍候...";
 
     try {
-      const base64Image = await compressImage(photoInput.files[0]);
+      // 確保手機版正確提取時間，不會混入奇怪字元
       const now = new Date();
-      const d = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
-      const t = now.toTimeString().split(' ')[0];
+      const pad = n => (n < 10 ? '0' + n : n);
+      const d = `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())}`;
+      const t = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
-      // 逐項傳送，保證順序與完整性
+      const base64Image = await compressImage(photoInput.files[0]);
+
       for(let i=0; i<items.length; i++) {
         status.innerText = `正在上傳第 ${i+1}/${items.length} 項...`;
-        await fetch(GAS_URL, {
+        
+        const payload = {
+          date: d, time: t,
+          type: document.getElementById('type').value,
+          merchant: document.getElementById('merchant').value,
+          foodName: items[i].name,
+          qty: items[i].qty,
+          imageBase64: i === 0 ? base64Image : "SKIP"
+        };
+
+        const response = await fetch(GAS_URL, {
           method: 'POST',
-          mode: 'no-cors', // 確保跨域請求能發出
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({
-            date: d, time: t,
-            type: document.getElementById('type').value,
-            merchant: document.getElementById('merchant').value,
-            foodName: items[i].name,
-            qty: items[i].qty,
-            imageBase64: i === 0 ? base64Image : "SKIP"
-          })
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
         });
+        
+        const result = await response.json();
+        if(result.status !== "success") throw new Error(result.message);
       }
-      status.innerText = "✅ 成功！兩秒後重置";
-      setTimeout(() => location.reload(), 2000);
+      
+      status.style.color = "green";
+      status.innerText = "✅ 成功！資料已寫入";
+      setTimeout(() => location.reload(), 1500);
+
     } catch(err) {
-      status.innerText = "❌ 發生錯誤";
+      console.error(err);
+      status.style.color = "red";
+      // 顯示具體錯誤，方便排查手機問題
+      status.innerText = "❌ 發生錯誤: " + err.message;
       btn.disabled = false;
     }
   };
 
+  // 針對手機版優化的圖片壓縮邏輯 (使用 URL.createObjectURL 節省記憶體)
   function compressImage(file) {
-    return new Promise(res => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = e => {
-        const img = new Image();
-        img.src = e.target.result;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          const max = 800;
-          let w = img.width, h = img.height;
-          if(w > max) { h *= max/w; w = max; }
-          canvas.width = w; canvas.height = h;
-          ctx.drawImage(img, 0, 0, w, h);
-          res(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
-        };
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl); // 釋放記憶體
+        const canvas = document.createElement('canvas');
+        const max = 800;
+        let w = img.width, h = img.height;
+        if(w > max) { h *= max/w; w = max; }
+        canvas.width = w; canvas.height = h;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
       };
+      
+      img.onerror = () => reject(new Error("手機無法讀取此圖片"));
+      img.src = objectUrl;
     });
   }
 </script>
