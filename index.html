@@ -5,208 +5,155 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>飲食記錄</title>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      margin: 0; padding: 0; background-color: #f7f7f8; color: #333;
-    }
-    header {
-      background-color: #ff9800; color: white; text-align: center;
-      padding: 16px; font-size: 20px; font-weight: bold;
-      position: sticky; top: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 100;
-    }
+    body { font-family: -apple-system, sans-serif; margin: 0; background: #f7f7f8; }
+    header { background: #ff9800; color: white; text-align: center; padding: 16px; font-weight: bold; position: sticky; top: 0; z-index: 10; }
     .container { padding: 20px; }
-    .form-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
-    input[type="text"], input[type="number"], select {
-      width: 100%; padding: 12px; border: 1px solid #ddd;
-      border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: #fff;
-    }
-    .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
-    .file-upload-btn {
-      border: 2px dashed #ff9800; color: #ff9800; background-color: white;
-      padding: 15px; border-radius: 8px; width: 100%; font-size: 16px;
-      font-weight: bold; text-align: center; box-sizing: border-box;
-    }
-    .file-upload-wrapper input[type="file"] {
-      position: absolute; left: 0; top: 0; opacity: 0; height: 100%; width: 100%;
-    }
-    /* 食物清單佈局 */
-    .food-item { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+    input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+    .food-item { display: flex; gap: 8px; margin-bottom: 10px; }
     .food-item input[name="foodName"] { flex: 3; }
     .food-item input[name="foodQty"] { flex: 1.5; text-align: center; }
-    .del-btn { 
-      background: #ff5252; color: white; border: none; border-radius: 50%; 
-      width: 24px; height: 24px; font-size: 12px; cursor: pointer; flex-shrink: 0;
-    }
-    
-    .add-btn {
-      background-color: #fff; color: #ff9800; border: 1px solid #ff9800;
-      padding: 10px; border-radius: 8px; width: 100%; font-weight: bold;
-      margin-top: 5px; cursor: pointer;
-    }
-    button[type="submit"] {
-      width: 100%; padding: 15px; background-color: #ff9800; color: white;
-      border: none; border-radius: 8px; font-size: 18px; font-weight: bold;
-      margin-top: 25px; box-shadow: 0 4px 6px rgba(255, 152, 0, 0.3);
-    }
-    button[type="submit"]:disabled { background-color: #ccc; }
-    #status { text-align: center; margin-top: 15px; font-weight: bold; font-size: 14px; }
-    #previewImg { max-width: 100%; max-height: 150px; border-radius: 8px; display: none; margin: 10px auto; border: 1px solid #eee; }
+    .del-btn { background: #ff5252; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; }
+    .add-btn { background: white; color: #ff9800; border: 1px solid #ff9800; padding: 10px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; }
+    .upload-box { border: 2px dashed #ff9800; padding: 15px; text-align: center; border-radius: 8px; background: white; cursor: pointer; position: relative; }
+    #photo { position: absolute; opacity: 0; left: 0; top: 0; width: 100%; height: 100%; }
+    #previewImg { max-width: 100%; max-height: 150px; display: none; margin: 10px auto; border-radius: 5px; }
+    button[type="submit"] { width: 100%; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin-top: 20px; }
+    #status { text-align: center; margin-top: 15px; font-size: 14px; color: #666; }
   </style>
 </head>
 <body>
 
-  <header>飲食記錄</header>
+<header>飲食記錄</header>
 
-  <div class="container">
-    <form id="dietForm">
-      
-      <div class="form-group">
-        <label>相片</label>
-        <div class="file-upload-wrapper">
-          <div class="file-upload-btn" id="fileLabel">📸 點擊拍照或選取</div>
-          <input type="file" id="photo" accept="image/*" required>
-        </div>
-        <img id="previewImg">
+<div class="container">
+  <form id="dietForm">
+    <div class="form-group">
+      <label>相片</label>
+      <div class="upload-box">
+        <span id="fileLabel">📸 點擊選取相片</span>
+        <input type="file" id="photo" accept="image/*" required>
       </div>
+      <img id="previewImg">
+    </div>
 
-      <div class="form-group">
-        <label>類型 (Type)</label>
-        <select id="type" required>
-          <option value="外出" selected>外出</option>
-          <option value="Self Prepare">Self Prepare</option>
-        </select>
-      </div>
+    <div class="form-group">
+      <label>類型</label>
+      <select id="type">
+        <option value="外出">外出</option>
+        <option value="Self Prepare">Self Prepare</option>
+      </select>
+    </div>
 
-      <div class="form-group">
-        <label>食店名稱 (Merchant)</label>
-        <input type="text" id="merchant" placeholder="例如：麥當勞" required>
-      </div>
+    <div class="form-group">
+      <label>食店名稱</label>
+      <input type="text" id="merchant" placeholder="店名" required>
+    </div>
 
-      <div class="form-group">
-        <label>食物與數量 (可輸入 0.5)</label>
-        <div id="foodList">
-          </div>
-        <button type="button" class="add-btn" onclick="addFoodRow()">＋ 新增食物</button>
-      </div>
+    <div class="form-group">
+      <label>食物與數量</label>
+      <div id="foodList"></div>
+      <button type="button" class="add-btn" onclick="addFoodRow()">＋ 新增食物</button>
+    </div>
 
-      <button type="submit" id="submitBtn">傳送資料</button>
-      <div id="status"></div>
+    <button type="submit" id="submitBtn">傳送資料</button>
+    <div id="status"></div>
+  </form>
+</div>
 
-    </form>
-  </div>
+<script>
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbwc80ayuKY8EHNa8kLfe_sOuHMHvEE3YzVGouQxdD0lztuOuKlU9sf_6ggkv3_UoHy-/exec";
 
-  <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwc80ayuKY8EHNa8kLfe_sOuHMHvEE3YzVGouQxdD0lztuOuKlU9sf_6ggkv3_UoHy-/exec";
+  const foodListContainer = document.getElementById('foodList');
+  function addFoodRow() {
+    const div = document.createElement('div');
+    div.className = 'food-item';
+    div.innerHTML = `<input type="text" name="foodName" placeholder="食物" required>
+                     <input type="number" name="foodQty" value="1" min="0.5" step="0.5">
+                     <button type="button" class="del-btn" onclick="this.parentElement.remove()">✕</button>`;
+    foodListContainer.appendChild(div);
+  }
+  addFoodRow(); // 初始一行
 
-    const foodListContainer = document.getElementById('foodList');
-    
-    // 初始化 1 行
-    addFoodRow();
-
-    function addFoodRow() {
-      const div = document.createElement('div');
-      div.className = 'food-item';
-      // step="0.5" 允許輸入與點選半份
-      div.innerHTML = `
-        <input type="text" name="foodName" placeholder="食物名稱" required>
-        <input type="number" name="foodQty" value="1" min="0.5" step="0.5">
-        <button type="button" class="del-btn" onclick="this.parentElement.remove()">✕</button>
-      `;
-      foodListContainer.appendChild(div);
+  const photoInput = document.getElementById('photo');
+  photoInput.onchange = e => {
+    if(e.target.files[0]) {
+      document.getElementById('fileLabel').innerText = "✅ 已選取相片";
+      const reader = new FileReader();
+      reader.onload = e => { 
+        const preview = document.getElementById('previewImg');
+        preview.src = e.target.result;
+        preview.style.display = "block";
+      };
+      reader.readAsDataURL(e.target.files[0]);
     }
+  };
 
-    const photoInput = document.getElementById('photo');
-    const previewImg = document.getElementById('previewImg');
-    const fileLabel = document.getElementById('fileLabel');
+  document.getElementById('dietForm').onsubmit = async e => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const status = document.getElementById('status');
+    const items = Array.from(document.querySelectorAll('.food-item')).map(row => ({
+      name: row.querySelector('[name="foodName"]').value,
+      qty: row.querySelector('[name="foodQty"]').value
+    }));
 
-    photoInput.addEventListener('change', function(e) {
-      if(e.target.files.length > 0) {
-        fileLabel.innerText = "✅ 已選取相片";
-        const reader = new FileReader();
-        reader.onload = (e) => { previewImg.src = e.target.result; previewImg.style.display = "block"; }
-        reader.readAsDataURL(e.target.files[0]);
-      }
-    });
+    btn.disabled = true;
+    status.innerText = "正在處理圖片...";
 
-    document.getElementById('dietForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const submitBtn = document.getElementById('submitBtn');
-      const statusDiv = document.getElementById('status');
-      
-      const rows = document.querySelectorAll('.food-item');
-      let items = [];
-      rows.forEach(row => {
-        const name = row.querySelector('input[name="foodName"]').value.trim();
-        const qty = row.querySelector('input[name="foodQty"]').value;
-        if(name !== "") items.push({ name, qty });
-      });
-
-      submitBtn.disabled = true;
-      statusDiv.style.color = "#ff9800";
-      
+    try {
+      const base64Image = await compressImage(photoInput.files[0]);
       const now = new Date();
-      const dateStr = now.getFullYear() + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + String(now.getDate()).padStart(2, '0');
-      const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
+      const d = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
+      const t = now.toTimeString().split(' ')[0];
 
-      try {
-        statusDiv.innerText = "正在處理圖片...";
-        const base64Image = await compressImage(photoInput.files[0]);
-        
-        // 逐筆傳送
-        for(let i = 0; i < items.length; i++) {
-          statusDiv.innerText = `正在傳送 (${i+1}/${items.length})...`;
-          
-          const payload = {
-            date: dateStr,
-            time: timeStr,
+      // 逐項傳送，保證順序與完整性
+      for(let i=0; i<items.length; i++) {
+        status.innerText = `正在上傳第 ${i+1}/${items.length} 項...`;
+        await fetch(GAS_URL, {
+          method: 'POST',
+          mode: 'no-cors', // 確保跨域請求能發出
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            date: d, time: t,
             type: document.getElementById('type').value,
             merchant: document.getElementById('merchant').value,
             foodName: items[i].name,
             qty: items[i].qty,
-            calories: "", 
-            imageBase64: i === 0 ? base64Image : "SKIP" 
-          };
-
-          await fetch(GAS_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload)
-          });
-        }
-
-        statusDiv.innerText = "✅ 成功記錄！";
-        statusDiv.style.color = "green";
-        setTimeout(() => location.reload(), 1500);
-
-      } catch (error) {
-        statusDiv.innerText = "❌ 錯誤: " + error.message;
-        statusDiv.style.color = "red";
-        submitBtn.disabled = false;
+            imageBase64: i === 0 ? base64Image : "SKIP"
+          })
+        });
       }
-    });
-
-    function compressImage(file) {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (e) => {
-          const img = new Image();
-          img.src = e.target.result;
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX = 800;
-            let w = img.width, h = img.height;
-            if (w > MAX) { h *= MAX / w; w = MAX; }
-            canvas.width = w; canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, w, h);
-            resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
-          };
-        };
-      });
+      status.innerText = "✅ 成功！兩秒後重置";
+      setTimeout(() => location.reload(), 2000);
+    } catch(err) {
+      status.innerText = "❌ 發生錯誤";
+      btn.disabled = false;
     }
-  </script>
+  };
+
+  function compressImage(file) {
+    return new Promise(res => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = e => {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const max = 800;
+          let w = img.width, h = img.height;
+          if(w > max) { h *= max/w; w = max; }
+          canvas.width = w; canvas.height = h;
+          ctx.drawImage(img, 0, 0, w, h);
+          res(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
+        };
+      };
+    });
+  }
+</script>
+
 </body>
 </html>
