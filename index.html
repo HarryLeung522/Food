@@ -3,25 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>飲食記錄</title>
+  <title>飲食記錄 (穩定版)</title>
   <style>
     body { font-family: -apple-system, sans-serif; margin: 0; background: #f7f7f8; }
-    header { background: #ff9800; color: white; text-align: center; padding: 16px; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+    header { background: #ff9800; color: white; text-align: center; padding: 16px; font-weight: bold; }
     .container { padding: 20px; }
     .form-group { margin-bottom: 15px; }
     label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-    input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: #fff; }
+    input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: #fff; }
     .food-item { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
-    .food-item input[name="foodName"] { flex: 3; }
-    .food-item select[name="foodQty"] { flex: 1.8; }
-    .del-btn { background: #ff5252; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-    .add-btn { background: white; color: #ff9800; border: 1px solid #ff9800; padding: 10px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; }
-    .upload-box { border: 2px dashed #ff9800; padding: 15px; text-align: center; border-radius: 8px; background: white; cursor: pointer; position: relative; }
-    #photo { position: absolute; opacity: 0; left: 0; top: 0; width: 100%; height: 100%; cursor: pointer; }
+    .food-item input { flex: 3; }
+    .food-item select { flex: 1.5; }
+    .del-btn { background: #ff5252; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; flex-shrink: 0; }
+    .add-btn { background: white; color: #ff9800; border: 1px solid #ff9800; padding: 10px; border-radius: 8px; width: 100%; font-weight: bold; margin-bottom: 20px; }
+    .upload-box { border: 2px dashed #ff9800; padding: 15px; text-align: center; border-radius: 8px; background: #fff; position: relative; }
+    #photo { position: absolute; opacity: 0; left: 0; top: 0; width: 100%; height: 100%; }
     #previewImg { max-width: 100%; max-height: 150px; display: none; margin: 10px auto; border-radius: 5px; }
-    button[type="submit"] { width: 100%; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 6px rgba(255,152,0,0.2); }
-    button[type="submit"]:disabled { background: #ccc; }
-    #status { text-align: center; margin-top: 15px; font-size: 14px; font-weight: bold; min-height: 20px; }
+    button[type="submit"] { width: 100%; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; }
+    #status { text-align: center; margin-top: 15px; font-size: 14px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -33,32 +32,28 @@
     <div class="form-group">
       <label>相片</label>
       <div class="upload-box">
-        <span id="fileLabel">📸 點擊拍照或選取</span>
+        <span id="fileLabel">📸 點擊拍照</span>
         <input type="file" id="photo" accept="image/*" required>
       </div>
       <img id="previewImg">
     </div>
 
     <div class="form-group">
-      <label>類型</label>
-      <select id="type">
+      <label>資訊</label>
+      <select id="type" style="margin-bottom: 10px;">
         <option value="外出">外出</option>
         <option value="Self Prepare">Self Prepare</option>
       </select>
+      <input type="text" id="merchant" placeholder="店名" required>
     </div>
 
     <div class="form-group">
-      <label>食店名稱</label>
-      <input type="text" id="merchant" placeholder="例如：麥當勞" required>
-    </div>
-
-    <div class="form-group">
-      <label>食物與數量</label>
+      <label>食物清單</label>
       <div id="foodList"></div>
       <button type="button" class="add-btn" onclick="addFoodRow()">＋ 新增食物</button>
     </div>
 
-    <button type="submit" id="submitBtn">傳送資料</button>
+    <button type="submit" id="submitBtn">一次過傳送</button>
     <div id="status"></div>
   </form>
 </div>
@@ -66,43 +61,32 @@
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbwc80ayuKY8EHNa8kLfe_sOuHMHvEE3YzVGouQxdD0lztuOuKlU9sf_6ggkv3_UoHy-/exec";
 
-  const foodListContainer = document.getElementById('foodList');
-  
   function addFoodRow() {
     const div = document.createElement('div');
     div.className = 'food-item';
-    // 改為 Select 下拉選單
     div.innerHTML = `
-      <input type="text" name="foodName" placeholder="食物名稱" required>
+      <input type="text" name="foodName" placeholder="食物" required>
       <select name="foodQty">
         <option value="半份">半份</option>
         <option value="1" selected>1</option>
+        <option value="1.5">1.5</option>
         <option value="2">2</option>
         <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10</option>
       </select>
       <button type="button" class="del-btn" onclick="this.parentElement.remove()">✕</button>
     `;
-    foodListContainer.appendChild(div);
+    document.getElementById('foodList').appendChild(div);
   }
-  
-  // 初始一行
-  addFoodRow(); 
+  addFoodRow();
 
   const photoInput = document.getElementById('photo');
   photoInput.onchange = e => {
     if(e.target.files[0]) {
-      document.getElementById('fileLabel').innerText = "✅ 已選取相片";
+      document.getElementById('fileLabel').innerText = "✅ 已準備";
       const reader = new FileReader();
-      reader.onload = event => { 
+      reader.onload = ev => { 
         const preview = document.getElementById('previewImg');
-        preview.src = event.target.result;
+        preview.src = ev.target.result;
         preview.style.display = "block";
       };
       reader.readAsDataURL(e.target.files[0]);
@@ -114,6 +98,7 @@
     const btn = document.getElementById('submitBtn');
     const status = document.getElementById('status');
     
+    // 一口氣收集所有食物
     const items = Array.from(document.querySelectorAll('.food-item')).map(row => ({
       name: row.querySelector('[name="foodName"]').value.trim(),
       qty: row.querySelector('[name="foodQty"]').value
@@ -121,65 +106,55 @@
 
     btn.disabled = true;
     status.style.color = "#ff9800";
-    status.innerText = "正在上傳中...";
+    status.innerText = "⏳ 正在打包傳送中...";
 
     try {
       const now = new Date();
-      const pad = n => (n < 10 ? '0' + n : n);
-      const d = `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())}`;
-      const t = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-
+      const d = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
+      const t = now.toTimeString().split(' ')[0];
       const base64Image = await compressImage(photoInput.files[0]);
 
-      for(let i=0; i<items.length; i++) {
-        status.innerText = `正在上傳第 ${i+1}/${items.length} 項...`;
-        
-        const payload = {
-          date: d, time: t,
-          type: document.getElementById('type').value,
-          merchant: document.getElementById('merchant').value,
-          foodName: items[i].name,
-          qty: items[i].qty, // 這裡會直接傳送 "半份" 或數字字串
-          imageBase64: i === 0 ? base64Image : "SKIP"
-        };
+      // 只發送一次請求！
+      const payload = {
+        date: d, time: t,
+        type: document.getElementById('type').value,
+        merchant: document.getElementById('merchant').value,
+        imageBase64: base64Image,
+        items: items // 這裡傳送整個陣列
+      };
 
-        await fetch(GAS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
-      }
-      
+      const response = await fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
       status.style.color = "green";
-      status.innerText = "✅ 全部上傳成功！";
-      setTimeout(() => location.reload(), 1500);
+      status.innerText = "✅ 成功！已存入 " + items.length + " 項食物";
+      setTimeout(() => location.reload(), 2000);
 
     } catch(err) {
       status.style.color = "red";
-      status.innerText = "❌ 錯誤: " + err.message;
+      status.innerText = "❌ 傳送失敗，請再試一次";
       btn.disabled = false;
     }
   };
 
   function compressImage(file) {
-    return new Promise((resolve) => {
+    return new Promise(res => {
       const img = new Image();
-      const objectUrl = URL.createObjectURL(file);
+      img.src = URL.createObjectURL(file);
       img.onload = () => {
-        URL.revokeObjectURL(objectUrl); 
         const canvas = document.createElement('canvas');
-        const max = 800;
+        const max = 600; 
         let w = img.width, h = img.height;
         if(w > max) { h *= max/w; w = max; }
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
+        res(canvas.toDataURL('image/jpeg', 0.6).split(',')[1]);
       };
-      img.src = objectUrl;
     });
   }
 </script>
-
 </body>
 </html>
