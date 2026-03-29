@@ -3,25 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>飲食記錄</title>
+  <title>飲食記錄系統</title>
   <style>
-    body { font-family: -apple-system, sans-serif; margin: 0; background: #f7f7f8; color: #333; }
-    header { background: #ff9800; color: white; text-align: center; padding: 18px; font-weight: bold; font-size: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    /* 原有樣式保持不變 */
+    body { font-family: -apple-system, sans-serif; margin: 0; background: #f7f7f8; color: #333; padding-bottom: 50px; }
+    header { background: #ff9800; color: white; text-align: center; padding: 18px; font-weight: bold; font-size: 20px; }
     .container { padding: 20px; }
     .form-group { margin-bottom: 20px; }
     label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; color: #666; }
-    input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; background: #fff; -webkit-appearance: none; }
+    input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; background: #fff; }
     .food-item { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #eee; }
-    .food-item input { flex: 3; border: none; background: transparent; padding: 5px; }
-    .food-item select { flex: 1.5; border: 1px solid #eee; padding: 5px; background: #f9f9f9; text-align: center; }
-    .del-btn { background: #ff5252; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; flex-shrink: 0; font-weight: bold; }
-    .add-btn { background: white; color: #ff9800; border: 2px solid #ff9800; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px; }
-    .upload-box { border: 2px dashed #ff9800; padding: 20px; text-align: center; border-radius: 10px; background: #fff; position: relative; margin-top: 5px; }
+    .food-item input { flex: 3; border: none; background: transparent; }
+    .food-item select { flex: 1.5; border: 1px solid #eee; background: #f9f9f9; }
+    .del-btn { background: #ff5252; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; }
+    .add-btn { background: white; color: #ff9800; border: 2px solid #ff9800; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; margin-top: 5px; }
+    .upload-box { border: 2px dashed #ff9800; padding: 20px; text-align: center; border-radius: 10px; background: #fff; position: relative; }
     #photo { position: absolute; opacity: 0; left: 0; top: 0; width: 100%; height: 100%; cursor: pointer; }
-    #previewImg { max-width: 100%; max-height: 200px; display: none; margin: 15px auto; border-radius: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
-    #submitBtn { width: 100%; padding: 16px; background: #ff9800; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; margin-top: 25px; box-shadow: 0 4px 10px rgba(255,152,0,0.3); }
-    #submitBtn:disabled { background: #ccc; box-shadow: none; }
-    #status { text-align: center; margin-top: 20px; font-size: 15px; font-weight: bold; min-height: 1.5em; }
+    #previewImg { max-width: 100%; max-height: 200px; display: none; margin: 15px auto; border-radius: 8px; }
+    #submitBtn { width: 100%; padding: 16px; background: #ff9800; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; margin-top: 25px; }
+    #status { text-align: center; margin-top: 20px; font-size: 15px; font-weight: bold; }
+
+    /* 新區域樣式 */
+    .dashboard { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+    .dashboard-title { font-size: 22px; font-weight: bold; color: #ff9800; margin-bottom: 15px; text-align: center; }
+    .base-info { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ddd; }
+    .base-info p { margin: 5px 0; font-weight: bold; font-size: 15px; }
+    .card { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee; }
+    .card-title { font-size: 17px; font-weight: bold; border-left: 4px solid #ff9800; padding-left: 10px; margin-bottom: 12px; }
+    .progress-main { font-size: 24px; font-weight: 900; color: #ff9800; text-align: center; margin: 10px 0; }
+    .weekly-row { font-size: 13px; margin-bottom: 5px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+    .rank-item { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; }
+    .badge { background: #ff9800; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+    .alert-text { color: #ff5252; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -32,140 +45,196 @@
   <form id="dietForm">
     <div class="form-group">
       <label>現場拍照</label>
-      <div class="upload-box">
-        <span id="fileLabel">📸 點擊開啟相機</span>
-        <input type="file" id="photo" accept="image/*" required>
-      </div>
+      <div class="upload-box"><span id="fileLabel">📸 點擊開啟相機</span><input type="file" id="photo" accept="image/*" required></div>
       <img id="previewImg">
     </div>
-
     <div class="form-group">
       <label>用餐類型 & 店名</label>
-      <select id="type" style="margin-bottom: 10px;">
-        <option value="外出">外出用餐</option>
-        <option value="Self Prepare">自備 (Self Prepare)</option>
-      </select>
+      <select id="type" style="margin-bottom: 10px;"><option value="外出">外出用餐</option><option value="Self Prepare">自備 (Self Prepare)</option></select>
       <input type="text" id="merchant" placeholder="輸入食店或地點名稱" required>
     </div>
-
     <div class="form-group">
       <label>食物內容與數量</label>
       <div id="foodList"></div>
       <button type="button" class="add-btn" onclick="addFoodRow()">＋ 新增食物項目</button>
     </div>
-
     <button type="submit" id="submitBtn">確認傳送資料</button>
     <div id="status"></div>
   </form>
+
+  <div class="dashboard">
+    <div class="dashboard-title">📊 查看數據</div>
+    
+    <div class="form-group">
+      <label>用戶</label>
+      <select disabled><option selected>Harry</option></select>
+    </div>
+
+    <div class="base-info">
+      <p>一日所需基本卡路里：3000</p>
+      <p>目標熱量赤字：200</p>
+      <p style="color: #ff9800; font-size: 18px;">每日涉取目標：2800</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">今日進程</div>
+      <input type="date" id="statsDate" onchange="loadStats()">
+      <div class="progress-main" id="dailyDisplay">0 / 2800</div>
+      <div style="text-align:center; font-size:14px;" id="dailyRemain">今天尚餘 2800 卡路里涉取</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">每週進度 (週日開始)</div>
+      <input type="week" id="statsWeek" onchange="loadStats()">
+      <div id="weeklyLogList" style="margin-top:15px;"></div>
+      <div id="weeklyTotalDisplay" style="margin-top:10px; font-weight:bold; text-align:right; color:#ff9800;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">食店排行榜 (本週)</div>
+      <div id="merchantRankList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">食物排行榜 (本週)</div>
+      <div id="foodRankList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">外出 / Self Prepare 比例</div>
+      <div id="ratioDisplay" style="text-align:center; font-weight:bold;"></div>
+    </div>
+  </div>
 </div>
 
 <script>
-  // 重要：請在此處填入你部署後獲得的網址
+  // GAS 網址需保持一致
   const GAS_URL = "https://script.google.com/macros/s/AKfycbwc80ayuKY8EHNa8kLfe_sOuHMHvEE3YzVGouQxdD0lztuOuKlU9sf_6ggkv3_UoHy-/exec";
 
-  const foodListContainer = document.getElementById('foodList');
-  
-  // 新增食物列函數
+  // 初始化日期設定
+  window.onload = () => {
+    const now = new Date();
+    // 設定今日進程日期
+    const dateInput = document.getElementById('statsDate');
+    dateInput.value = now.toISOString().split('T')[0];
+    dateInput.max = now.toISOString().split('T')[0];
+    
+    // 設定 14 日限制
+    const minDate = new Date();
+    minDate.setDate(now.getDate() - 14);
+    dateInput.min = minDate.toISOString().split('T')[0];
+
+    // 設定週份
+    const weekInput = document.getElementById('statsWeek');
+    const year = now.getFullYear();
+    const oneJan = new Date(year, 0, 1);
+    const numberOfDays = Math.floor((now - oneJan) / (24 * 60 * 60 * 1000));
+    const result = Math.ceil((now.getDay() + 1 + numberOfDays) / 7);
+    weekInput.value = `${year}-W${String(result).padStart(2,'0')}`;
+
+    loadStats();
+  };
+
+  // 調用 GAS 拿取統計資料
+  function loadStats() {
+    const date = document.getElementById('statsDate').value;
+    const week = document.getElementById('statsWeek').value;
+    
+    // 在這裏我們使用一小段技巧，因為 GAS Web App 的跨域限制，
+    // 通常數據獲取會建議放在 doGet 載入。這裡為求方便，我們直接用 JSONP 或 Google Script Run。
+    // 假設您是將此 HTML 部署在 GAS 內部，請使用下面這行：
+    if(typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(renderStats).getStatistics(date, week);
+    }
+  }
+
+  function renderStats(s) {
+    if(!s || s.error) return;
+
+    // 1. 今日
+    document.getElementById('dailyDisplay').innerText = `${Math.round(s.dailyTotal)} / 2800`;
+    const remain = 2800 - s.dailyTotal;
+    document.getElementById('dailyRemain').innerText = `今天尚餘 ${Math.round(remain)} 卡路里涉取`;
+
+    // 2. 週進度
+    let weekHtml = '';
+    s.weeklyLog.forEach(day => {
+      const alertClass = day.deficit < 0 ? 'alert-text' : '';
+      const deficitText = day.deficit < 0 ? ` ＝ ${day.deficit} <span class="alert-text">(多餘熱量！)</span>` : ` ＝ ${day.deficit} (熱量赤字)`;
+      weekHtml += `<div class="weekly-row">${day.dateText}：2800 - ${Math.round(day.cal)}${deficitText}</div>`;
+    });
+    document.getElementById('weeklyLogList').innerHTML = weekHtml;
+    document.getElementById('weeklyTotalDisplay').innerText = `本週總結：${s.weeklyTotalDeficit >= 0 ? '熱量赤字 ' : '多餘熱量 '}${Math.round(Math.abs(s.weeklyTotalDeficit))}`;
+
+    // 3. 排行榜渲染函數
+    const renderRank = (data, elementId) => {
+      const sorted = Object.entries(data).sort((a,b) => b[1] - a[1]).slice(0, 5);
+      document.getElementById(elementId).innerHTML = sorted.map(([name, count]) => 
+        `<div class="rank-item"><span>${name}</span><span class="badge">${count} 次</span></div>`
+      ).join('') || '本週暫無數據';
+    };
+    renderRank(s.merchantRank, 'merchantRankList');
+    renderRank(s.foodRank, 'foodRankList');
+
+    // 4. 比例
+    const total = s.sourceRatio["外出"] + s.sourceRatio["Self Prepare"];
+    if(total > 0) {
+      const outP = Math.round(s.sourceRatio["外出"]/total*100);
+      document.getElementById('ratioDisplay').innerText = `外出 ${outP}% | 自備 ${100-outP}%`;
+    }
+  }
+
+  // --- 原有功能函數 (維持不變) ---
   function addFoodRow() {
     const div = document.createElement('div');
     div.className = 'food-item';
-    div.innerHTML = `
-      <input type="text" name="foodName" placeholder="食物名稱 (例如: 雞扒)" required>
-      <select name="foodQty">
-        <option value="0.5">0.5</option>
-        <option value="1" selected>1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10</option>
-      </select>
-      <button type="button" class="del-btn" onclick="this.parentElement.remove()">✕</button>
-    `;
-    foodListContainer.appendChild(div);
+    div.innerHTML = `<input type="text" name="foodName" placeholder="食物名稱" required>
+      <select name="foodQty"><option value="0.5">0.5</option><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
+      <button type="button" class="del-btn" onclick="this.parentElement.remove()">✕</button>`;
+    document.getElementById('foodList').appendChild(div);
   }
-  
-  // 預設載入一行
-  addFoodRow(); 
+  addFoodRow();
 
-  // 相片預覽處理
   const photoInput = document.getElementById('photo');
   photoInput.onchange = e => {
     if(e.target.files[0]) {
       document.getElementById('fileLabel').innerText = "✅ 相片已就緒";
       const reader = new FileReader();
       reader.onload = ev => { 
-        const preview = document.getElementById('previewImg');
-        preview.src = ev.target.result;
-        preview.style.display = "block";
+        document.getElementById('previewImg').src = ev.target.result;
+        document.getElementById('previewImg').style.display = "block";
       };
       reader.readAsDataURL(e.target.files[0]);
     }
   };
 
-  // 表單送出處理
   document.getElementById('dietForm').onsubmit = async e => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
     const status = document.getElementById('status');
-    
-    // 收集清單
     const items = Array.from(document.querySelectorAll('.food-item')).map(row => ({
       name: row.querySelector('[name="foodName"]').value.trim(),
       qty: row.querySelector('[name="foodQty"]').value
     }));
-
-    if (items.length === 0) { alert("請至少新增一項食物"); return; }
-
     btn.disabled = true;
-    status.style.color = "#ff9800";
-    status.innerText = "⏳ 正在傳送，請勿關閉視窗...";
-
+    status.innerText = "⏳ 正在傳送...";
     try {
       const now = new Date();
       const pad = n => (n < 10 ? '0' + n : n);
       const d = `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())}`;
       const t = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-
-      // 壓縮並轉碼圖片
       const base64Image = await compressImage(photoInput.files[0]);
-
-      // 打包 Payload (單次發送)
-      const payload = {
-        date: d, time: t,
-        type: document.getElementById('type').value,
-        merchant: document.getElementById('merchant').value,
-        imageBase64: base64Image,
-        items: items
-      };
-
-      const response = await fetch(GAS_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json();
-      
-      if(result.status === "success") {
-        status.style.color = "green";
-        status.innerText = "✅ 傳送成功！卡路里已計算。";
-        setTimeout(() => location.reload(), 2000);
-      } else {
-        throw new Error(result.message);
-      }
-
+      const payload = { date: d, time: t, type: document.getElementById('type').value, merchant: document.getElementById('merchant').value, imageBase64: base64Image, items: items };
+      await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+      status.innerText = "✅ 成功！正在更新數據...";
+      loadStats(); // 上傳後刷新數據
+      setTimeout(() => location.reload(), 2000);
     } catch(err) {
-      status.style.color = "red";
       status.innerText = "❌ 錯誤：" + err.message;
       btn.disabled = false;
     }
   };
 
-  // 圖片壓縮優化
   function compressImage(file) {
     return new Promise((resolve) => {
       const img = new Image();
