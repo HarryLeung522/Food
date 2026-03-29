@@ -30,9 +30,15 @@
     .file-upload-wrapper input[type="file"] {
       position: absolute; left: 0; top: 0; opacity: 0; height: 100%; width: 100%;
     }
-    .food-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+    /* 食物清單佈局 */
+    .food-item { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
     .food-item input[name="foodName"] { flex: 3; }
-    .food-item input[name="foodQty"] { flex: 1; text-align: center; }
+    .food-item input[name="foodQty"] { flex: 1.5; text-align: center; }
+    .del-btn { 
+      background: #ff5252; color: white; border: none; border-radius: 50%; 
+      width: 24px; height: 24px; font-size: 12px; cursor: pointer; flex-shrink: 0;
+    }
+    
     .add-btn {
       background-color: #fff; color: #ff9800; border: 1px solid #ff9800;
       padding: 10px; border-radius: 8px; width: 100%; font-weight: bold;
@@ -56,9 +62,9 @@
     <form id="dietForm">
       
       <div class="form-group">
-        <label>相片 (拍照或選取)</label>
+        <label>相片</label>
         <div class="file-upload-wrapper">
-          <div class="file-upload-btn" id="fileLabel">📸 點擊選取相片</div>
+          <div class="file-upload-btn" id="fileLabel">📸 點擊拍照或選取</div>
           <input type="file" id="photo" accept="image/*" required>
         </div>
         <img id="previewImg">
@@ -78,8 +84,9 @@
       </div>
 
       <div class="form-group">
-        <label>食物與數量</label>
-        <div id="foodList"></div>
+        <label>食物與數量 (可輸入 0.5)</label>
+        <div id="foodList">
+          </div>
         <button type="button" class="add-btn" onclick="addFoodRow()">＋ 新增食物</button>
       </div>
 
@@ -92,16 +99,19 @@
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwc80ayuKY8EHNa8kLfe_sOuHMHvEE3YzVGouQxdD0lztuOuKlU9sf_6ggkv3_UoHy-/exec";
 
-    // 初始化 5 行
     const foodListContainer = document.getElementById('foodList');
-    for(let i=0; i<5; i++) { addFoodRow(); }
+    
+    // 初始化 1 行
+    addFoodRow();
 
     function addFoodRow() {
       const div = document.createElement('div');
       div.className = 'food-item';
+      // step="0.5" 允許輸入與點選半份
       div.innerHTML = `
-        <input type="text" name="foodName" placeholder="食物名稱">
-        <input type="number" name="foodQty" value="1" min="1">
+        <input type="text" name="foodName" placeholder="食物名稱" required>
+        <input type="number" name="foodQty" value="1" min="0.5" step="0.5">
+        <button type="button" class="del-btn" onclick="this.parentElement.remove()">✕</button>
       `;
       foodListContainer.appendChild(div);
     }
@@ -124,7 +134,6 @@
       const submitBtn = document.getElementById('submitBtn');
       const statusDiv = document.getElementById('status');
       
-      // 收集有填寫的食物
       const rows = document.querySelectorAll('.food-item');
       let items = [];
       rows.forEach(row => {
@@ -132,8 +141,6 @@
         const qty = row.querySelector('input[name="foodQty"]').value;
         if(name !== "") items.push({ name, qty });
       });
-
-      if(items.length === 0) { alert("請填寫至少一項食物！"); return; }
 
       submitBtn.disabled = true;
       statusDiv.style.color = "#ff9800";
@@ -146,9 +153,9 @@
         statusDiv.innerText = "正在處理圖片...";
         const base64Image = await compressImage(photoInput.files[0]);
         
-        // 核心邏輯：逐筆傳送食物
+        // 逐筆傳送
         for(let i = 0; i < items.length; i++) {
-          statusDiv.innerText = `正在傳送第 ${i+1}/${items.length} 項食物...`;
+          statusDiv.innerText = `正在傳送 (${i+1}/${items.length})...`;
           
           const payload = {
             date: dateStr,
@@ -157,24 +164,24 @@
             merchant: document.getElementById('merchant').value,
             foodName: items[i].name,
             qty: items[i].qty,
-            calories: "", // G 行預留
-            imageBase64: i === 0 ? base64Image : "SKIP" // 只在第一行上傳圖片，節省流量（或根據需求每行都傳）
+            calories: "", 
+            imageBase64: i === 0 ? base64Image : "SKIP" 
           };
 
           await fetch(GAS_URL, {
             method: 'POST',
-            mode: 'no-cors', // 使用 no-cors 模式確保在大批量發送時更穩定
+            mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload)
           });
         }
 
-        statusDiv.innerText = "✅ 全部資料已成功存入！";
+        statusDiv.innerText = "✅ 成功記錄！";
         statusDiv.style.color = "green";
-        setTimeout(() => location.reload(), 2000);
+        setTimeout(() => location.reload(), 1500);
 
       } catch (error) {
-        statusDiv.innerText = "❌ 發生錯誤: " + error.message;
+        statusDiv.innerText = "❌ 錯誤: " + error.message;
         statusDiv.style.color = "red";
         submitBtn.disabled = false;
       }
