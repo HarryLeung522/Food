@@ -22,7 +22,6 @@
     #submitBtn { width: 100%; padding: 16px; background: #ff9800; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; margin-top: 25px; }
     #status { text-align: center; margin-top: 20px; font-size: 15px; font-weight: bold; }
 
-    /* 數據區域 */
     .dashboard { margin-top: 40px; border-top: 2px solid #ddd; padding-top: 20px; }
     .dashboard-title { font-size: 22px; font-weight: bold; color: #ff9800; margin-bottom: 15px; text-align: center; }
     .base-info { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ddd; }
@@ -65,9 +64,9 @@
     <div class="dashboard-title">📊 查看數據</div>
     <div class="form-group"><label>用戶</label><select disabled><option selected>Harry</option></select></div>
     <div class="base-info">
-      <p>一日所需基本卡路里：3000</p>
-      <p>目標熱量赤字：200</p>
-      <p style="color: #ff9800; font-size: 18px;">每日涉取目標：2800</p>
+      <p>一日所需基本卡路里：2400</p>
+      <p>目標熱量赤字：300</p>
+      <p style="color: #ff9800; font-size: 18px;">每日涉取目標：2100</p>
     </div>
 
     <div class="card">
@@ -92,20 +91,19 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbwc80ayuKY8EHNa8kLfe_sOuHMHvEE3YzVGouQxdD0lztuOuKlU9sf_6ggkv3_UoHy-/exec";
+  const DAILY_GOAL = 2100;
 
   window.onload = () => {
     const now = new Date();
     document.getElementById('statsDate').value = now.toISOString().split('T')[0];
     
-    // 計算當前週份 (ISO-8601)
-    const target = new Date(now.valueOf());
-    const dayNr = (now.getDay() + 6) % 7;
-    target.setDate(target.getDate() - dayNr + 3);
-    const firstThursday = target.valueOf();
-    target.setMonth(0, 1);
-    if (target.getDay() !== 4) target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
-    const weekNum = 1 + Math.ceil((firstThursday - target) / 604800000);
-    document.getElementById('statsWeek').value = `${now.getFullYear()}-W${String(weekNum).padStart(2,'0')}`;
+    // 計算週次
+    const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+    document.getElementById('statsWeek').value = `${d.getUTCFullYear()}-W${String(weekNo).padStart(2,'0')}`;
 
     loadStats();
   };
@@ -113,29 +111,22 @@
   async function loadStats() {
     const date = document.getElementById('statsDate').value;
     const week = document.getElementById('statsWeek').value;
-    const status = document.getElementById('dailyDisplay');
-    status.innerText = "⏳ 讀取中...";
-
     try {
-      // 透過 GET 方式獲取 JSON 資料
       const response = await fetch(`${GAS_URL}?action=getStats&date=${date}&week=${week}`);
       const s = await response.json();
       renderStats(s);
-    } catch (e) {
-      status.innerText = "讀取失敗";
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
   }
 
   function renderStats(s) {
-    document.getElementById('dailyDisplay').innerText = `${Math.round(s.dailyTotal)} / 2800`;
-    const remain = 2800 - s.dailyTotal;
+    document.getElementById('dailyDisplay').innerText = `${Math.round(s.dailyTotal)} / ${DAILY_GOAL}`;
+    const remain = DAILY_GOAL - s.dailyTotal;
     document.getElementById('dailyRemain').innerText = `今天尚餘 ${Math.round(remain)} 卡路里涉取`;
 
     let weekHtml = '';
     s.weeklyLog.forEach(day => {
       const isExtra = day.deficit < 0;
-      weekHtml += `<div class="weekly-row">${day.dateText}：2800 - ${Math.round(day.cal)} ＝ ${Math.round(day.deficit)} ${isExtra ? '<span class="alert-text">(多餘熱量！)</span>' : '(熱量赤字)'}</div>`;
+      weekHtml += `<div class="weekly-row">${day.dateText}：${DAILY_GOAL} - ${Math.round(day.cal)} ＝ ${Math.round(day.deficit)} ${isExtra ? '<span class="alert-text">(多餘熱量！)</span>' : '(熱量赤字)'}</div>`;
     });
     document.getElementById('weeklyLogList').innerHTML = weekHtml;
     document.getElementById('weeklyTotalDisplay').innerText = `本週總結：${s.weeklyTotalDeficit >= 0 ? '熱量赤字 ' : '多餘熱量 '}${Math.round(Math.abs(s.weeklyTotalDeficit))}`;
@@ -157,9 +148,8 @@
     div.innerHTML = `<input type="text" name="foodName" placeholder="食物名稱" required>
       <select name="foodQty"><option value="0.5">0.5</option><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
       <button type="button" class="del-btn" onclick="this.parentElement.remove()">✕</button>`;
-    foodListContainer.appendChild(div);
+    document.getElementById('foodList').appendChild(div);
   }
-  const foodListContainer = document.getElementById('foodList');
   addFoodRow();
 
   const photoInput = document.getElementById('photo');
