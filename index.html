@@ -7,111 +7,45 @@
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f7f7f8;
-      color: #333;
+      margin: 0; padding: 0; background-color: #f7f7f8; color: #333;
     }
     header {
-      background-color: #ff9800;
-      color: white;
-      text-align: center;
-      padding: 16px;
-      font-size: 20px;
-      font-weight: bold;
-      position: sticky;
-      top: 0;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      z-index: 100;
+      background-color: #ff9800; color: white; text-align: center;
+      padding: 16px; font-size: 20px; font-weight: bold;
+      position: sticky; top: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 100;
     }
-    .container {
-      padding: 20px;
+    .container { padding: 20px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+    input[type="text"], input[type="number"], select {
+      width: 100%; padding: 12px; border: 1px solid #ddd;
+      border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: #fff;
     }
-    .form-group {
-      margin-bottom: 16px;
-    }
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      font-size: 14px;
-    }
-    input[type="text"], select {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      box-sizing: border-box;
-      font-size: 16px;
-      background-color: #fff;
-      -webkit-appearance: none;
-    }
-    .file-upload-wrapper {
-      position: relative;
-      overflow: hidden;
-      display: inline-block;
-      width: 100%;
-    }
+    .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
     .file-upload-btn {
-      border: 2px dashed #ff9800;
-      color: #ff9800;
-      background-color: white;
-      padding: 15px;
-      border-radius: 8px;
-      width: 100%;
-      font-size: 16px;
-      font-weight: bold;
-      text-align: center;
-      box-sizing: border-box;
-      cursor: pointer;
+      border: 2px dashed #ff9800; color: #ff9800; background-color: white;
+      padding: 15px; border-radius: 8px; width: 100%; font-size: 16px;
+      font-weight: bold; text-align: center; box-sizing: border-box;
     }
-    /* 核心修正：移除 capture 屬性，保留 accept="image/*" */
     .file-upload-wrapper input[type="file"] {
-      font-size: 100px;
-      position: absolute;
-      left: 0;
-      top: 0;
-      opacity: 0;
-      height: 100%;
-      width: 100%;
-      cursor: pointer;
+      position: absolute; left: 0; top: 0; opacity: 0; height: 100%; width: 100%;
+    }
+    .food-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+    .food-item input[name="foodName"] { flex: 3; }
+    .food-item input[name="foodQty"] { flex: 1; text-align: center; }
+    .add-btn {
+      background-color: #fff; color: #ff9800; border: 1px solid #ff9800;
+      padding: 10px; border-radius: 8px; width: 100%; font-weight: bold;
+      margin-top: 5px; cursor: pointer;
     }
     button[type="submit"] {
-      width: 100%;
-      padding: 14px;
-      background-color: #ff9800;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 10px;
-      box-shadow: 0 4px 6px rgba(255, 152, 0, 0.3);
+      width: 100%; padding: 15px; background-color: #ff9800; color: white;
+      border: none; border-radius: 8px; font-size: 18px; font-weight: bold;
+      margin-top: 25px; box-shadow: 0 4px 6px rgba(255, 152, 0, 0.3);
     }
-    button[type="submit"]:disabled {
-      background-color: #ccc;
-      box-shadow: none;
-    }
-    #status {
-      text-align: center;
-      margin-top: 15px;
-      font-weight: bold;
-      font-size: 14px;
-      min-height: 20px;
-    }
-    #previewContainer {
-      width: 100%;
-      text-align: center;
-      margin-top: 10px;
-    }
-    #previewImg {
-      max-width: 100px;
-      max-height: 100px;
-      border-radius: 4px;
-      display: none;
-      margin: 0 auto;
-    }
+    button[type="submit"]:disabled { background-color: #ccc; }
+    #status { text-align: center; margin-top: 15px; font-weight: bold; font-size: 14px; }
+    #previewImg { max-width: 100%; max-height: 150px; border-radius: 8px; display: none; margin: 10px auto; border: 1px solid #eee; }
   </style>
 </head>
 <body>
@@ -122,21 +56,18 @@
     <form id="dietForm">
       
       <div class="form-group">
-        <label>相片 (拍照或從相簿選取)</label>
+        <label>相片 (拍照或選取)</label>
         <div class="file-upload-wrapper">
           <div class="file-upload-btn" id="fileLabel">📸 點擊選取相片</div>
           <input type="file" id="photo" accept="image/*" required>
         </div>
-        <div id="previewContainer">
-          <img id="previewImg" alt="預覽圖">
-        </div>
+        <img id="previewImg">
       </div>
 
       <div class="form-group">
         <label>類型 (Type)</label>
         <select id="type" required>
-          <option value="" disabled selected>請選擇類型</option>
-          <option value="外出">外出</option>
+          <option value="外出" selected>外出</option>
           <option value="Self Prepare">Self Prepare</option>
         </select>
       </div>
@@ -147,8 +78,9 @@
       </div>
 
       <div class="form-group">
-        <label>食物 (Food Name)</label>
-        <input type="text" id="foodName" placeholder="例如：漢堡包" required>
+        <label>食物與數量</label>
+        <div id="foodList"></div>
+        <button type="button" class="add-btn" onclick="addFoodRow()">＋ 新增食物</button>
       </div>
 
       <button type="submit" id="submitBtn">傳送資料</button>
@@ -160,107 +92,110 @@
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwc80ayuKY8EHNa8kLfe_sOuHMHvEE3YzVGouQxdD0lztuOuKlU9sf_6ggkv3_UoHy-/exec";
 
-    const form = document.getElementById('dietForm');
-    const photoInput = document.getElementById('photo');
-    const fileLabel = document.getElementById('fileLabel');
-    const previewImg = document.getElementById('previewImg');
-    const submitBtn = document.getElementById('submitBtn');
-    const statusDiv = document.getElementById('status');
+    // 初始化 5 行
+    const foodListContainer = document.getElementById('foodList');
+    for(let i=0; i<5; i++) { addFoodRow(); }
 
-    // 處理相片選取後的預覽與文字更新
+    function addFoodRow() {
+      const div = document.createElement('div');
+      div.className = 'food-item';
+      div.innerHTML = `
+        <input type="text" name="foodName" placeholder="食物名稱">
+        <input type="number" name="foodQty" value="1" min="1">
+      `;
+      foodListContainer.appendChild(div);
+    }
+
+    const photoInput = document.getElementById('photo');
+    const previewImg = document.getElementById('previewImg');
+    const fileLabel = document.getElementById('fileLabel');
+
     photoInput.addEventListener('change', function(e) {
       if(e.target.files.length > 0) {
-        const file = e.target.files[0];
-        fileLabel.innerText = "✅ 已選取: " + file.name;
-        
-        // 顯示小預覽圖
+        fileLabel.innerText = "✅ 已選取相片";
         const reader = new FileReader();
-        reader.onload = function(e) {
-          previewImg.src = e.target.result;
-          previewImg.style.display = "block";
-        }
-        reader.readAsDataURL(file);
-      } else {
-        fileLabel.innerText = "📸 點擊選取相片";
-        previewImg.style.display = "none";
+        reader.onload = (e) => { previewImg.src = e.target.result; previewImg.style.display = "block"; }
+        reader.readAsDataURL(e.target.files[0]);
       }
     });
 
-    form.addEventListener('submit', async function(e) {
+    document.getElementById('dietForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      const submitBtn = document.getElementById('submitBtn');
+      const statusDiv = document.getElementById('status');
       
-      const file = photoInput.files[0];
-      if (!file) return;
+      // 收集有填寫的食物
+      const rows = document.querySelectorAll('.food-item');
+      let items = [];
+      rows.forEach(row => {
+        const name = row.querySelector('input[name="foodName"]').value.trim();
+        const qty = row.querySelector('input[name="foodQty"]').value;
+        if(name !== "") items.push({ name, qty });
+      });
+
+      if(items.length === 0) { alert("請填寫至少一項食物！"); return; }
 
       submitBtn.disabled = true;
-      submitBtn.innerText = "上傳中...";
-      statusDiv.innerText = "正在處理資料...";
-
+      statusDiv.style.color = "#ff9800";
+      
       const now = new Date();
       const dateStr = now.getFullYear() + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + String(now.getDate()).padStart(2, '0');
       const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
 
       try {
-        const base64Image = await compressAndConvertImage(file);
+        statusDiv.innerText = "正在處理圖片...";
+        const base64Image = await compressImage(photoInput.files[0]);
         
-        const payload = {
-          date: dateStr,
-          time: timeStr,
-          type: document.getElementById('type').value,
-          merchant: document.getElementById('merchant').value,
-          foodName: document.getElementById('foodName').value,
-          imageBase64: base64Image
-        };
+        // 核心邏輯：逐筆傳送食物
+        for(let i = 0; i < items.length; i++) {
+          statusDiv.innerText = `正在傳送第 ${i+1}/${items.length} 項食物...`;
+          
+          const payload = {
+            date: dateStr,
+            time: timeStr,
+            type: document.getElementById('type').value,
+            merchant: document.getElementById('merchant').value,
+            foodName: items[i].name,
+            qty: items[i].qty,
+            calories: "", // G 行預留
+            imageBase64: i === 0 ? base64Image : "SKIP" // 只在第一行上傳圖片，節省流量（或根據需求每行都傳）
+          };
 
-        const response = await fetch(GAS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
-
-        const result = await response.json();
-
-        if (result.status === "success") {
-          statusDiv.innerText = "✅ 成功存入 Google Sheet！";
-          statusDiv.style.color = "green";
-          form.reset();
-          previewImg.style.display = "none";
-          fileLabel.innerText = "📸 點擊選取相片";
-        } else {
-          throw new Error(result.message);
+          await fetch(GAS_URL, {
+            method: 'POST',
+            mode: 'no-cors', // 使用 no-cors 模式確保在大批量發送時更穩定
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+          });
         }
 
+        statusDiv.innerText = "✅ 全部資料已成功存入！";
+        statusDiv.style.color = "green";
+        setTimeout(() => location.reload(), 2000);
+
       } catch (error) {
-        statusDiv.innerText = "❌ 錯誤: " + error.message;
+        statusDiv.innerText = "❌ 發生錯誤: " + error.message;
         statusDiv.style.color = "red";
-      } finally {
         submitBtn.disabled = false;
-        submitBtn.innerText = "傳送資料";
       }
     });
 
-    function compressAndConvertImage(file) {
-      return new Promise((resolve, reject) => {
+    function compressImage(file) {
+      return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = function(event) {
+        reader.onload = (e) => {
           const img = new Image();
-          img.src = event.target.result;
-          img.onload = function() {
+          img.src = e.target.result;
+          img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 1000; 
-            let width = img.width;
-            let height = img.height;
-            if (width > MAX_WIDTH) {
-              height = Math.round((height * MAX_WIDTH) / width);
-              width = MAX_WIDTH;
-            }
-            canvas.width = width;
-            canvas.height = height;
+            const MAX = 800;
+            let w = img.width, h = img.height;
+            if (w > MAX) { h *= MAX / w; w = MAX; }
+            canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            resolve(dataUrl.split(',')[1]);
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
           };
         };
       });
